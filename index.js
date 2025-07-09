@@ -11,23 +11,30 @@ app.get('/buscar', async (req, res) => {
 
   const url = `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(query)}`;
 
-  try {
-    const response = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0' }
+try {
+  const response = await fetch(url, {
+    headers: { 'User-Agent': 'Mozilla/5.0' }
+  });
+  const data = await response.json();
+
+  if (!data.results) {
+    return res.status(500).json({ 
+      error: 'Resposta da API não contém "results"', 
+      data 
     });
-    const data = await response.json();
-
-    const resultados = data.results.slice(0, 5).map(item => ({
-      title: item.title,
-      thumbnail: item.thumbnail.replace('http:', 'https:'),
-      permalink: item.permalink,
-      price: item.price
-    }));
-
-    res.json(resultados);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar no Mercado Livre', detail: err.message });
   }
+
+  const resultados = data.results.slice(0, 5).map(item => ({
+    title: item.title,
+    thumbnail: item.thumbnail.replace('http:', 'https:'),
+    permalink: item.permalink,
+    price: item.price
+  }));
+
+  res.json(resultados);
+} catch (err) {
+  res.status(500).json({ error: 'Erro ao buscar no Mercado Livre', detail: err.message });
+}
 });
 
 const PORT = process.env.PORT || 3000;
